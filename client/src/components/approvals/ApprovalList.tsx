@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ApprovalType } from '@/types/contract';
 import { formatEther } from 'ethers';
 import { cn } from '@/utils/cn';
+import { ProcessApprovalModal } from './ProcessApprovalModal';
 import { 
   CheckCircle, 
   XCircle, 
@@ -25,136 +26,6 @@ import {
   Calendar,
   ExternalLink,
 } from 'lucide-react';
-
-interface ProcessApprovalModalProps {
-  approval: any;
-  relatedTransaction: any;
-  onClose: () => void;
-  onProcess: (approvalId: bigint, approved: boolean, reason?: string) => void;
-  isProcessing: boolean;
-}
-
-const ProcessApprovalModal: React.FC<ProcessApprovalModalProps> = ({
-  approval,
-  relatedTransaction,
-  onClose,
-  onProcess,
-  isProcessing
-}) => {
-  const [reason, setReason] = useState('');
-  const [decision, setDecision] = useState<'approve' | 'reject' | null>(null);
-
-  const handleSubmit = () => {
-    if (decision) {
-      onProcess(approval.id, decision === 'approve', reason);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-semibold">Process Approval</h3>
-          <Button variant="outline" size="sm" onClick={onClose}>×</Button>
-        </div>
-
-        <div className="space-y-4 mb-6">
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <h4 className="font-medium mb-3">Approval Details</h4>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-gray-600">ID:</span>
-                <p className="font-mono">#{Number(approval.id)}</p>
-              </div>
-              <div>
-                <span className="text-gray-600">Type:</span>
-                <p>{approval.approvalType === ApprovalType.Transaction ? 'Transaction' : 
-                    approval.approvalType === ApprovalType.UserRegistration ? 'User Registration' : 'Role Update'}</p>
-              </div>
-              <div>
-                <span className="text-gray-600">Requester:</span>
-                <p className="font-mono text-xs">{approval.requester.slice(0, 10)}...</p>
-              </div>
-              <div>
-                <span className="text-gray-600">Created:</span>
-                <p>{new Date(Number(approval.timestamp) * 1000).toLocaleDateString()}</p>
-              </div>
-            </div>
-          </div>
-
-          {relatedTransaction && (
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-medium mb-3">Related Transaction</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Amount:</span>
-                  <span className="font-semibold">{formatEther(relatedTransaction.amount)} ETH</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">To:</span>
-                  <span className="font-mono text-xs">{relatedTransaction.to.slice(0, 10)}...</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Description:</span>
-                  <p className="mt-1">{relatedTransaction.description}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-700">Your Decision *</label>
-            <div className="flex gap-3">
-              <Button
-                variant={decision === 'approve' ? 'default' : 'outline'}
-                onClick={() => setDecision('approve')}
-                className="flex-1 flex items-center gap-2"
-              >
-                <CheckCircle className="h-4 w-4" />
-                Approve
-              </Button>
-              <Button
-                variant={decision === 'reject' ? 'destructive' : 'outline'}
-                onClick={() => setDecision('reject')}
-                className="flex-1 flex items-center gap-2"
-              >
-                <XCircle className="h-4 w-4" />
-                Reject
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="reason" className="text-sm font-medium text-gray-700">
-              Reason (optional)
-            </label>
-            <textarea
-              id="reason"
-              rows={3}
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Enter your reason for this decision..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={onClose} className="flex-1">
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!decision || isProcessing}
-            className="flex-1"
-          >
-            {isProcessing ? 'Processing...' : `${decision === 'approve' ? 'Approve' : 'Reject'}`}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export const ApprovalList: React.FC = () => {
   const { data: approvals, isLoading, error } = usePendingApprovals();
@@ -240,12 +111,8 @@ export const ApprovalList: React.FC = () => {
   };
 
   const handleProcessApproval = async (approvalId: bigint, approved: boolean, reason?: string) => {
-    try {
-      await processApprovalMutation.mutateAsync({ approvalId, approved, reason });
-      setProcessingModal(null);
-    } catch (error) {
-      console.error('Failed to process approval:', error);
-    }
+    await processApprovalMutation.mutateAsync({ approvalId, approved, reason });
+    setProcessingModal(null);
   };
 
   const handleBulkApprove = async () => {

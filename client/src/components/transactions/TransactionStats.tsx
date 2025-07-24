@@ -10,14 +10,36 @@ import {
   XCircle,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useContractMetrics, useAllTransactions } from '@/hooks/useContractData';
-import { TransactionStatus } from '@/types/contract';
+import { useContractMetrics, useAllTransactions, useUserTransactions } from '@/hooks/useContractData';
+import { TransactionStatus, UserRole } from '@/types/contract';
+import { useWeb3 } from '@/contexts/Web3Provider';
+import { WalletAlert } from '@/components/ui/WalletAlert';
 import { formatEther } from 'ethers';
 import { cn } from "@/utils/cn";
 
-export const TransactionStats: React.FC = () => {
+interface TransactionStatsProps {
+  userRole?: number;
+}
+
+export const TransactionStats: React.FC<TransactionStatsProps> = ({ userRole }) => {
+  const { address, isConnected } = useWeb3();
   const { data: contractMetrics, isLoading: metricsLoading } = useContractMetrics();
-  const { data: transactions, isLoading: transactionsLoading } = useAllTransactions();
+  
+  // Determine which data source to use based on user role
+  const isAdminOrManager = userRole === UserRole.Admin || userRole === UserRole.Manager;
+  
+  // Always call both hooks but use appropriate data
+  const { data: allTransactions, isLoading: allLoading } = useAllTransactions();
+  const { data: userTransactions, isLoading: userLoading } = useUserTransactions(address || undefined);
+  
+  // Use the appropriate data source
+  const transactions = isAdminOrManager ? allTransactions : userTransactions;
+  const transactionsLoading = isAdminOrManager ? allLoading : userLoading;
+  
+  // Check if wallet is connected
+  if (!isConnected) {
+    return <WalletAlert />;
+  }
 
   const quickStats = useMemo(() => {
     if (!contractMetrics || !transactions) {

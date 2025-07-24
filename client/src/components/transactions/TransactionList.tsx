@@ -1,14 +1,15 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useAllTransactions } from '@/hooks/useContractData';
+import { useAllTransactions, useUserTransactions } from '@/hooks/useContractData';
 import { useWeb3 } from '@/contexts/Web3Provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TransactionStatus } from '@/types/contract';
+import { TransactionStatus, UserRole } from '@/types/contract';
+import { WalletAlert } from '@/components/ui/WalletAlert';
 import { formatEther } from 'ethers';
 import { 
   Search, 
@@ -27,31 +28,42 @@ import {
 import { cn } from '@/utils/cn';
 interface TransactionListProps {
   showUserTransactions?: boolean;
+  userRole?: number;
 }
 
 export const TransactionList: React.FC<TransactionListProps> = ({ 
-  showUserTransactions = false 
+  showUserTransactions = false,
+  userRole 
 }) => {
-  const { data: transactions, isLoading, error } = useAllTransactions();
-  const { address } = useWeb3();
+  const { address, isConnected } = useWeb3();
+  
+  // Determine which data source to use based on user role
+  const isAdminOrManager = userRole === UserRole.Admin || userRole === UserRole.Manager;
+  const shouldShowAllTransactions = isAdminOrManager && !showUserTransactions;
+  
+  // Always call both hooks but use appropriate data
+  const { data: allTransactions, isLoading: allLoading, error: allError } = useAllTransactions();
+  const { data: userTransactions, isLoading: userLoading, error: userError } = useUserTransactions(address || undefined);
+  
+  // Use the appropriate data source based on role and showUserTransactions flag
+  const transactions = shouldShowAllTransactions ? allTransactions : userTransactions;
+  const isLoading = shouldShowAllTransactions ? allLoading : userLoading;
+  const error = shouldShowAllTransactions ? allError : userError;
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'timestamp' | 'amount'>('timestamp');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
 
+  // Check if wallet is connected
+  if (!isConnected) {
+    return <WalletAlert />;
+  }
+
   const filteredTransactions = useMemo(() => {
     if (!transactions) return [];
 
     let filtered = transactions;
-
-    // Filter by user if needed
-    if (showUserTransactions && address) {
-      filtered = filtered.filter(tx => 
-        tx.from.toLowerCase() === address.toLowerCase() || 
-        tx.to.toLowerCase() === address.toLowerCase()
-      );
-    }
 
     // Search filter
     if (searchTerm) {
@@ -87,7 +99,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
     });
 
     return filtered;
-  }, [transactions, searchTerm, statusFilter, sortBy, sortOrder, showUserTransactions, address]);
+  }, [transactions, searchTerm, statusFilter, sortBy, sortOrder]);
 
   const getStatusColor = (status: number) => {
     switch (status) {
@@ -138,6 +150,17 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
   const handleRowClick = (tx: any) => {
     setSelectedTransaction(tx);
+  };
+
+  // Determine the title based on role and data source
+  const getTitle = () => {
+    if (showUserTransactions) {
+      return 'My Transactions';
+    }
+    if (shouldShowAllTransactions) {
+      return 'All Transactions';
+    }
+    return 'My Transactions';
   };
 
   if (isLoading) {
@@ -200,7 +223,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               </div>
               <div>
                 <CardTitle className="text-xl font-bold text-slate-900">
-                  {showUserTransactions ? 'My Transactions' : 'All Transactions'}
+                  {getTitle()}
                 </CardTitle>
                 <p className="text-sm text-slate-600">({filteredTransactions.length} total)</p>
               </div>

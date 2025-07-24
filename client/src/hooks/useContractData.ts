@@ -230,7 +230,7 @@ export const useApprovalHistory = () => {
 };
 
 export const useProcessApproval = () => {
-  const { contract, isConnected } = useWeb3();
+  const { contract, isConnected, address } = useWeb3();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -239,11 +239,44 @@ export const useProcessApproval = () => {
       approved: boolean; 
       reason?: string; 
     }) => {
-      if (!contract) throw new Error('Contract not available');
+      if (!isConnected) {
+        throw new Error('Wallet not connected. Please connect your wallet to continue.');
+      }
       
-      const tx = await contract.processApproval(approvalId, approved);
-      await tx.wait();
-      return tx;
+      if (!address) {
+        throw new Error('No wallet address found. Please reconnect your wallet.');
+      }
+      
+      if (!contract) {
+        throw new Error('Contract not available. Please ensure your wallet is connected and try again.');
+      }
+      
+      console.log('Processing approval:', { approvalId: approvalId.toString(), approved, reason });
+      
+      try {
+        const tx = await contract.processApproval(approvalId, approved, reason || '');
+        console.log('Transaction sent:', tx.hash);
+        
+        const receipt = await tx.wait();
+        console.log('Transaction confirmed:', receipt);
+        
+        return receipt;
+      } catch (error: any) {
+        console.error('Transaction failed:', error);
+        
+        // Handle specific error types
+        if (error.code === 'UNSUPPORTED_OPERATION') {
+          throw new Error('Wallet connection issue. Please reconnect your wallet and try again.');
+        }
+        if (error.code === 'ACTION_REJECTED') {
+          throw new Error('Transaction was rejected by user.');
+        }
+        if (error.code === 'INSUFFICIENT_FUNDS') {
+          throw new Error('Insufficient funds to complete the transaction.');
+        }
+        
+        throw new Error(error.message || 'Failed to process approval. Please try again.');
+      }
     },
     onSuccess: () => {
       // Invalidate relevant queries to refresh data
@@ -260,16 +293,49 @@ export const useProcessApproval = () => {
 };
 
 export const useRequestApproval = () => {
-  const { contract, isConnected } = useWeb3();
+  const { contract, isConnected, address } = useWeb3();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ transactionId }: { transactionId: bigint }) => {
-      if (!contract) throw new Error('Contract not available');
+    mutationFn: async ({ transactionId, reason }: { transactionId: bigint; reason?: string }) => {
+      if (!isConnected) {
+        throw new Error('Wallet not connected. Please connect your wallet to continue.');
+      }
       
-      const tx = await contract.requestApproval(transactionId);
-      await tx.wait();
-      return tx;
+      if (!address) {
+        throw new Error('No wallet address found. Please reconnect your wallet.');
+      }
+      
+      if (!contract) {
+        throw new Error('Contract not available. Please ensure your wallet is connected and try again.');
+      }
+      
+      console.log('Requesting approval for transaction ID:', transactionId.toString());
+      
+      try {
+        const tx = await contract.requestApproval(transactionId, reason || 'Automatic approval request after transaction creation');
+        console.log('Approval request sent:', tx.hash);
+        
+        const receipt = await tx.wait();
+        console.log('Approval request confirmed:', receipt);
+        
+        return receipt;
+      } catch (error: any) {
+        console.error('Approval request failed:', error);
+        
+        // Handle specific error types
+        if (error.code === 'UNSUPPORTED_OPERATION') {
+          throw new Error('Wallet connection issue. Please reconnect your wallet and try again.');
+        }
+        if (error.code === 'ACTION_REJECTED') {
+          throw new Error('Approval request was rejected by user.');
+        }
+        if (error.code === 'INSUFFICIENT_FUNDS') {
+          throw new Error('Insufficient funds to complete the approval request.');
+        }
+        
+        throw new Error(error.message || 'Failed to request approval. Please try again.');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-approvals'] });
@@ -344,7 +410,7 @@ export const useUser = (userAddress?: string) => {
 };
 
 export const useRegisterUser = () => {
-  const { contract, isConnected } = useWeb3();
+  const { contract, isConnected, address } = useWeb3();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -359,11 +425,44 @@ export const useRegisterUser = () => {
       email: string; 
       role: number; 
     }) => {
-      if (!contract) throw new Error('Contract not available');
+      if (!isConnected) {
+        throw new Error('Wallet not connected. Please connect your wallet to continue.');
+      }
       
-      const tx = await contract.registerUser(walletAddress, name, email, role);
-      await tx.wait();
-      return tx;
+      if (!address) {
+        throw new Error('No wallet address found. Please reconnect your wallet.');
+      }
+      
+      if (!contract) {
+        throw new Error('Contract not available. Please ensure your wallet is connected and try again.');
+      }
+      
+      console.log('Registering user:', { walletAddress, name, email, role });
+      
+      try {
+        const tx = await contract.registerUser(walletAddress, name, email, role);
+        console.log('User registration sent:', tx.hash);
+        
+        const receipt = await tx.wait();
+        console.log('User registration confirmed:', receipt);
+        
+        return receipt;
+      } catch (error: any) {
+        console.error('User registration failed:', error);
+        
+        // Handle specific error types
+        if (error.code === 'UNSUPPORTED_OPERATION') {
+          throw new Error('Wallet connection issue. Please reconnect your wallet and try again.');
+        }
+        if (error.code === 'ACTION_REJECTED') {
+          throw new Error('User registration was rejected by user.');
+        }
+        if (error.code === 'INSUFFICIENT_FUNDS') {
+          throw new Error('Insufficient funds to complete the registration.');
+        }
+        
+        throw new Error(error.message || 'Failed to register user. Please try again.');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['all-users'] });
@@ -376,7 +475,7 @@ export const useRegisterUser = () => {
 };
 
 export const useUpdateUserRole = () => {
-  const { contract, isConnected } = useWeb3();
+  const { contract, isConnected, address } = useWeb3();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -387,11 +486,44 @@ export const useUpdateUserRole = () => {
       userAddress: string; 
       newRole: number; 
     }) => {
-      if (!contract) throw new Error('Contract not available');
+      if (!isConnected) {
+        throw new Error('Wallet not connected. Please connect your wallet to continue.');
+      }
       
-      const tx = await contract.updateUserRole(userAddress, newRole);
-      await tx.wait();
-      return tx;
+      if (!address) {
+        throw new Error('No wallet address found. Please reconnect your wallet.');
+      }
+      
+      if (!contract) {
+        throw new Error('Contract not available. Please ensure your wallet is connected and try again.');
+      }
+      
+      console.log('Updating user role:', { userAddress, newRole });
+      
+      try {
+        const tx = await contract.updateUserRole(userAddress, newRole);
+        console.log('Role update sent:', tx.hash);
+        
+        const receipt = await tx.wait();
+        console.log('Role update confirmed:', receipt);
+        
+        return receipt;
+      } catch (error: any) {
+        console.error('User role update failed:', error);
+        
+        // Handle specific error types
+        if (error.code === 'UNSUPPORTED_OPERATION') {
+          throw new Error('Wallet connection issue. Please reconnect your wallet and try again.');
+        }
+        if (error.code === 'ACTION_REJECTED') {
+          throw new Error('Role update was rejected by user.');
+        }
+        if (error.code === 'INSUFFICIENT_FUNDS') {
+          throw new Error('Insufficient funds to complete the role update.');
+        }
+        
+        throw new Error(error.message || 'Failed to update user role. Please try again.');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['all-users'] });

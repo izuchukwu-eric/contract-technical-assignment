@@ -735,7 +735,7 @@ export const getContract = (provider: BrowserProvider | JsonRpcProvider, signer?
 
 export const NETWORK_CONFIG = {
   localhost: {
-    chainId: '0x7A69',
+    chainId: '31337',
     chainName: 'Hardhat Network',
     nativeCurrency: {
       name: 'Ether',
@@ -745,7 +745,7 @@ export const NETWORK_CONFIG = {
     rpcUrls: ['http://127.0.0.1:8545'],
   },
   sepolia: {
-    chainId: '0xAA36A7',
+    chainId: '11155111',
     chainName: 'Sepolia Test Network',
     nativeCurrency: {
       name: 'Sepolia Ether',

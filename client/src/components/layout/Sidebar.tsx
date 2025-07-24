@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/utils/cn';
+import { UserRole } from '@/types/contract';
 import { 
   LayoutDashboard, 
   ArrowRightLeft, 
@@ -27,13 +28,14 @@ const navigation = [
   { 
     name: 'Approvals', 
     href: '/approvals', 
-    icon: CheckCircle 
+    icon: CheckCircle,
+    privilegedOnly: true // Manager and Admin only
   },
   { 
     name: 'Users', 
     href: '/users', 
     icon: Users,
-    adminOnly: true 
+    privilegedOnly: true // Manager and Admin only
   },
 ];
 
@@ -48,7 +50,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ userRole, user }) => {
   const pathname = usePathname();
   
-  const isAdmin = userRole === 2; // Admin role
+  const isManagerOrAdmin = userRole === UserRole.Manager || userRole === UserRole.Admin;
 
   return (
     <div className="flex flex-col w-64 bg-slate-800 min-h-screen shadow-xl">
@@ -69,8 +71,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ userRole, user }) => {
         {navigation.map((item) => {
           const isActive = pathname === item.href;
           
-          // Hide admin-only items if user is not admin
-          if (item.adminOnly && !isAdmin) {
+          // Hide privileged items if user is not manager or admin
+          if (item.privilegedOnly && !isManagerOrAdmin) {
             return null;
           }
           

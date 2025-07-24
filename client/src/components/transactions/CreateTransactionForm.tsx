@@ -8,6 +8,7 @@ import { parseEther } from 'ethers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useWeb3 } from '@/contexts/Web3Provider';
+import { useRequestApproval } from '@/hooks/useContractData';
 import { createTransactionSchema, type CreateTransactionFormData } from '@/lib/schemas';
 import { Plus, Loader2, CheckCircle, AlertCircle, X } from 'lucide-react';
 
@@ -15,6 +16,9 @@ export const CreateTransactionForm: React.FC = () => {
   const { contract, isConnected } = useWeb3();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [createdTransactionId, setCreatedTransactionId] = useState<bigint | null>(null);
+  
+  const requestApprovalMutation = useRequestApproval();
 
   const {
     register,
@@ -30,17 +34,72 @@ export const CreateTransactionForm: React.FC = () => {
       if (!contract) throw new Error('Contract not available');
       
       const amountInWei = parseEther(data.amount);
+      console.log('Creating transaction:', { to: data.to, amount: data.amount, description: data.description });
+      
       const tx = await contract.createTransaction(data.to, amountInWei, data.description);
-      await tx.wait();
-      return tx;
+      console.log('Transaction sent:', tx.hash);
+      
+      const receipt = await tx.wait();
+      console.log('Transaction confirmed:', receipt);
+      
+      // Extract transaction ID from the transaction logs/events
+      // The contract should emit an event with the transaction ID
+      let transactionId: bigint | null = null;
+      
+      if (receipt.logs && receipt.logs.length > 0) {
+        // Look for TransactionCreated event or similar
+        for (const log of receipt.logs) {
+          try {
+            const parsedLog = contract.interface.parseLog(log);
+            if (parsedLog && parsedLog.name === 'TransactionCreated') {
+              transactionId = parsedLog.args.transactionId;
+              console.log('Found transaction ID:', transactionId?.toString());
+              break;
+            }
+          } catch (error) {
+            // Skip logs that can't be parsed
+          }
+        }
+      }
+      
+      return { receipt, transactionId };
     },
-    onSuccess: () => {
+    onSuccess: async (result, variables) => {
+      const { transactionId } = result;
+      
+      if (transactionId !== null) {
+        setCreatedTransactionId(transactionId);
+        console.log('Requesting approval for transaction ID:', transactionId.toString());
+        
+        try {
+          await requestApprovalMutation.mutateAsync({ 
+            transactionId, 
+            reason: variables.description // Use the transaction description as the approval reason
+          });
+        } catch (error) {
+          console.error('Failed to request approval:', error);
+          // Don't fail the entire process if approval request fails
+        }
+      }
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['pending-approvals'] });
       queryClient.invalidateQueries({ queryKey: ['contract-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['recent-transactions'] });
       queryClient.invalidateQueries({ queryKey: ['user-transactions'] });
       queryClient.invalidateQueries({ queryKey: ['all-transactions'] });
-      reset();
-      setIsModalOpen(false);
+      
+      // Keep modal open for a moment to show success message, then close
+      setTimeout(() => {
+        reset();
+        setIsModalOpen(false);
+        setCreatedTransactionId(null);
+        requestApprovalMutation.reset();
+      }, 2000);
+    },
+    onError: (error) => {
+      console.error('Transaction creation failed:', error);
+      setCreatedTransactionId(null);
     },
   });
 
@@ -56,6 +115,8 @@ export const CreateTransactionForm: React.FC = () => {
     setIsModalOpen(false);
     reset();
     createTransactionMutation.reset();
+    requestApprovalMutation.reset();
+    setCreatedTransactionId(null);
   };
 
   // Handle ESC key to close modal
@@ -100,7 +161,6 @@ export const CreateTransactionForm: React.FC = () => {
 
   return (
     <>
-      {/* Create New Transaction Button */}
       <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 shadow-lg hover:shadow-xl transition-all duration-300">
         <CardContent className="p-6">
           <Button 
@@ -209,34 +269,86 @@ export const CreateTransactionForm: React.FC = () => {
                   )}
                 </div>
 
-                {createTransactionMutation.error && (
+                {(createTransactionMutation.error || requestApprovalMutation.error) && (
                   <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg shadow-sm">
                     <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
-                    <p className="text-sm text-red-700">
-                      {createTransactionMutation.error.message || 'Failed to create transaction'}
+                    <div className="text-sm text-red-700">
+                      {createTransactionMutation.error && (
+                        <p>{createTransactionMutation.error.message || 'Failed to create transaction'}</p>
+                      )}
+                      {requestApprovalMutation.error && (
+                        <p>{requestApprovalMutation.error.message || 'Failed to request approval'}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {createTransactionMutation.isPending && (
+                  <div className="flex items-center gap-2 p-4 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
+                    <Loader2 className="h-5 w-5 text-blue-600 animate-spin flex-shrink-0" />
+                    <p className="text-sm text-blue-700">
+                      Creating transaction...
                     </p>
                   </div>
                 )}
 
-                {createTransactionMutation.isSuccess && (
+                {createTransactionMutation.isSuccess && requestApprovalMutation.isPending && (
+                  <div className="flex items-center gap-2 p-4 bg-yellow-50 border border-yellow-200 rounded-lg shadow-sm">
+                    <Loader2 className="h-5 w-5 text-yellow-600 animate-spin flex-shrink-0" />
+                    <p className="text-sm text-yellow-700">
+                      Requesting approval for transaction...
+                    </p>
+                  </div>
+                )}
+
+                {createTransactionMutation.isSuccess && requestApprovalMutation.isSuccess && (
                   <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg shadow-sm">
                     <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
-                    <p className="text-sm text-green-700">
-                      Transaction created successfully!
-                    </p>
+                    <div className="text-sm text-green-700">
+                      <p className="font-medium">Transaction created and approval requested successfully!</p>
+                      {createdTransactionId && (
+                        <p className="text-xs text-green-600 mt-1">
+                          Transaction ID: #{createdTransactionId.toString()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {createTransactionMutation.isSuccess && !requestApprovalMutation.isPending && !requestApprovalMutation.isSuccess && !requestApprovalMutation.error && (
+                  <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg shadow-sm">
+                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <div className="text-sm text-green-700">
+                      <p className="font-medium">Transaction created successfully!</p>
+                      {createdTransactionId && (
+                        <p className="text-xs text-green-600 mt-1">
+                          Transaction ID: #{createdTransactionId.toString()}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
 
                 <div className="flex gap-3 pt-4 border-t border-slate-100">
                   <Button
                     type="submit"
-                    disabled={isSubmitting || createTransactionMutation.isPending}
+                    disabled={isSubmitting || createTransactionMutation.isPending || requestApprovalMutation.isPending}
                     className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                   >
-                    {isSubmitting || createTransactionMutation.isPending ? (
+                    {createTransactionMutation.isPending ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         Creating Transaction...
+                      </>
+                    ) : requestApprovalMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Requesting Approval...
+                      </>
+                    ) : isSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Processing...
                       </>
                     ) : (
                       <>

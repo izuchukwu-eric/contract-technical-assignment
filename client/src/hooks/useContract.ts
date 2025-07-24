@@ -1,18 +1,36 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useWallet } from './useWallet';
 import { getContract } from '@/lib/contracts';
 
 export const useContract = () => {
   const { provider, address, isConnected } = useWallet();
+  const [signer, setSigner] = useState<any>(null);
+
+  useEffect(() => {
+    const getSigner = async () => {
+      if (!provider || !isConnected || !address) {
+        setSigner(null);
+        return;
+      }
+
+      try {
+        const signerInstance = await provider.getSigner();
+        setSigner(signerInstance);
+      } catch (error) {
+        console.error('Failed to get signer:', error);
+        setSigner(null);
+      }
+    };
+
+    getSigner();
+  }, [provider, address, isConnected]);
 
   const contract = useMemo(() => {
-    if (!provider) return null;
-    
-    const signer = isConnected && address ? provider.getSigner() : null;
+    if (!provider || !signer) return null;
     return getContract(provider, signer);
-  }, [provider, address, isConnected]);
+  }, [provider, signer]);
 
   const readContract = useMemo(() => {
     if (!provider) return null;
@@ -22,6 +40,6 @@ export const useContract = () => {
   return {
     contract,
     readContract,
-    isReady: !!contract,
+    isReady: !!contract && !!signer,
   };
 };

@@ -282,7 +282,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ isAdmin }) => {
                           <div className="flex items-center gap-4 text-sm text-slate-600">
                             <span className="flex items-center gap-1">
                               <Mail className="w-3 h-3" />
-                              {formatAddress(user.walletAddress)}
+                              {user.email}
                             </span>
                           </div>
                         </div>

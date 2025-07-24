@@ -6,9 +6,11 @@ import { CreateTransactionForm } from '@/components/transactions/CreateTransacti
 import { TransactionStats } from '@/components/transactions/TransactionStats'
 import { WalletAlert } from '@/components/ui/WalletAlert'
 import { useWeb3 } from '@/contexts/Web3Provider'
+import { useUser } from '@/hooks/useContractData'
 
 export default function TransactionsPage() {
-  const { isConnected } = useWeb3();
+  const { isConnected, address } = useWeb3();
+  const { data: user } = useUser(address || undefined);
 
   if (!isConnected) {
     return (
@@ -25,13 +27,13 @@ export default function TransactionsPage() {
     <DashboardLayout title="Transactions">
       <div className="space-y-6">
         {/* Quick Stats */}
-        <TransactionStats />
+        <TransactionStats userRole={user?.role} />
 
         {/* Create New Transaction Form */}
         <CreateTransactionForm />
 
         {/* Enhanced Transaction List */}
-        <TransactionList />
+        <TransactionList userRole={user?.role} />
       </div>
     </DashboardLayout>
   )

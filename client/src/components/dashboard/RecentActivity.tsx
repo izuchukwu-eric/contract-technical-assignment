@@ -1,20 +1,43 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useRecentTransactions, useRecentApprovals } from '@/hooks/useContractData';
-import { TransactionStatus, ApprovalStatus } from '@/types/contract';
+import { useRecentTransactions, useUserTransactions, useRecentApprovals, useProcessApproval } from '@/hooks/useContractData';
+import { TransactionStatus, ApprovalStatus, UserRole } from '@/types/contract';
 import { formatEther } from 'ethers';
 import { ArrowUpDown, Clock, CheckCircle2, XCircle, ArrowUpRight, ArrowDownLeft, ExternalLink, Calendar } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useWeb3 } from '@/contexts/Web3Provider';
 import { Badge } from '../ui/badge';
+import { ProcessApprovalModal } from '@/components/approvals/ProcessApprovalModal';
 
-export const RecentActivity: React.FC = () => {
+interface RecentActivityProps {
+  userRole?: number;
+}
+
+export const RecentActivity: React.FC<RecentActivityProps> = ({ userRole }) => {
   const { address } = useWeb3();
-  const { data: transactions, isLoading: txLoading } = useRecentTransactions();
+  
+  // Determine which data source to use based on user role
+  const isAdminOrManager = userRole === UserRole.Admin || userRole === UserRole.Manager;
+  
+  // Always call both hooks but use appropriate data
+  const { data: allRecentTransactions, isLoading: allTxLoading } = useRecentTransactions();
+  const { data: userTransactions, isLoading: userTxLoading } = useUserTransactions(address || undefined);
+  
+  // Use appropriate transaction data and take only the most recent 3
+  const allTransactionData = isAdminOrManager ? allRecentTransactions : userTransactions;
+  const transactions = allTransactionData?.slice(0, 3);
+  const txLoading = isAdminOrManager ? allTxLoading : userTxLoading;
+  
   const { data: approvals, isLoading: approvalLoading } = useRecentApprovals();
+  const processApprovalMutation = useProcessApproval();
+  
+  const [processingModal, setProcessingModal] = useState<any>(null);
+  
+  // Check if user has permission to see approvals
+  const canViewApprovals = userRole === UserRole.Manager || userRole === UserRole.Admin;
 
   const getStatusColor = (status: number, type: 'transaction' | 'approval') => {
     if (type === 'transaction') {
@@ -81,6 +104,21 @@ export const RecentActivity: React.FC = () => {
     return transactions.find(tx => tx.id === transactionId);
   };
 
+  const handleProcessApproval = async (approvalId: bigint, approved: boolean, reason?: string) => {
+    await processApprovalMutation.mutateAsync({ approvalId, approved, reason });
+    setProcessingModal(null);
+  };
+
+  const handleApprove = (approval: any) => {
+    const relatedTransaction = getRelatedTransaction(approval.transactionId);
+    setProcessingModal({ approval, relatedTransaction });
+  };
+
+  const handleReject = (approval: any) => {
+    const relatedTransaction = getRelatedTransaction(approval.transactionId);
+    setProcessingModal({ approval, relatedTransaction });
+  };
+
   if (txLoading || approvalLoading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -107,9 +145,18 @@ export const RecentActivity: React.FC = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <>
+      <div className={cn(
+        "grid gap-6",
+        canViewApprovals 
+          ? "grid-cols-1 lg:grid-cols-3" 
+          : "grid-cols-1"
+      )}>
       {/* Recent Transactions */}
-      <Card className="xl:col-span-2 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+      <Card className={cn(
+        "shadow-lg border-0 bg-white/80 backdrop-blur-sm",
+        canViewApprovals ? "xl:col-span-2" : "w-full"
+      )}>
         <CardHeader className="border-b border-slate-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -185,8 +232,9 @@ export const RecentActivity: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Pending Approvals */}
-      <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+      {/* Pending Approvals - Only visible to Managers and Admins */}
+      {canViewApprovals && (
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader className="border-b border-slate-100">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg flex items-center justify-center">
@@ -229,13 +277,18 @@ export const RecentActivity: React.FC = () => {
                         <span className="text-xs text-slate-500">{formatDate(approval.timestamp)}</span>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" className="flex-1 text-white cursor-pointer bg-emerald-600 hover:bg-emerald-700">
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleApprove(approval)}
+                          className="flex-1 text-white cursor-pointer bg-emerald-600 hover:bg-emerald-700"
+                        >
                           <CheckCircle2 className="w-3 h-3 mr-1" />
                           Approve
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => handleReject(approval)}
                           className="flex-1 text-red-600 cursor-pointer border-red-200 hover:bg-red-50 bg-transparent"
                         >
                           <XCircle className="w-3 h-3 mr-1" />
@@ -256,6 +309,19 @@ export const RecentActivity: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
+      )}
+      </div>
+
+      {/* Processing Modal */}
+      {processingModal && (
+        <ProcessApprovalModal
+          approval={processingModal.approval}
+          relatedTransaction={processingModal.relatedTransaction}
+          onClose={() => setProcessingModal(null)}
+          onProcess={handleProcessApproval}
+          isProcessing={processApprovalMutation.isPending}
+        />
+      )}
+    </>
   );
 };

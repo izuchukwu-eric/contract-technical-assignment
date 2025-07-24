@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAllTransactions, useAllUsers } from '@/hooks/useContractData';
+import { useAllTransactions, useUserTransactions, useAllUsers } from '@/hooks/useContractData';
+import { useWeb3 } from '@/contexts/Web3Provider';
+import { UserRole } from '@/types/contract';
+import { WalletAlert } from '@/components/ui/WalletAlert';
 import {
   TrendingUp,
   TrendingDown,
@@ -19,12 +22,38 @@ interface DataPoint {
   label: string;
 }
 
-export const AnalyticsChart: React.FC = () => {
+interface AnalyticsChartProps {
+  userRole?: number;
+}
+
+export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ userRole }) => {
+  const { address, isConnected } = useWeb3();
   const [selectedMetric, setSelectedMetric] = useState('volume');
   const [selectedPeriod, setSelectedPeriod] = useState('7d');
 
-  const { data: transactions, isLoading: transactionsLoading } = useAllTransactions();
+  // Determine which data source to use based on user role
+  const isAdminOrManager = userRole === UserRole.Admin || userRole === UserRole.Manager;
+  
+  // Always call both hooks but use appropriate data
+  const { data: allTransactions, isLoading: allTxLoading } = useAllTransactions();
+  const { data: userTransactions, isLoading: userTxLoading } = useUserTransactions(address || undefined);
   const { data: users, isLoading: usersLoading } = useAllUsers();
+  
+  // Use appropriate transaction data
+  const transactions = isAdminOrManager ? allTransactions : userTransactions;
+  const transactionsLoading = isAdminOrManager ? allTxLoading : userTxLoading;
+  
+  // Check if wallet is connected
+  if (!isConnected) {
+    return <WalletAlert />;
+  }
+
+  // Ensure regular users don't access the "users" metric
+  useEffect(() => {
+    if (!isAdminOrManager && selectedMetric === 'users') {
+      setSelectedMetric('volume');
+    }
+  }, [isAdminOrManager, selectedMetric]);
 
   // Process real contract data - this must be called on every render
   const data = useMemo(() => {
@@ -293,7 +322,9 @@ export const AnalyticsChart: React.FC = () => {
               </SelectTrigger>
               <SelectContent className="bg-white">
                 <SelectItem value="volume" className="cursor-pointer">Transaction Volume</SelectItem>
-                <SelectItem value="users" className="cursor-pointer">Active Users</SelectItem>
+                {isAdminOrManager && (
+                  <SelectItem value="users" className="cursor-pointer">Active Users</SelectItem>
+                )}
                 <SelectItem value="transactions" className="cursor-pointer">Transaction Count</SelectItem>
               </SelectContent>
             </Select>

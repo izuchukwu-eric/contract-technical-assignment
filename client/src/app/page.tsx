@@ -6,9 +6,11 @@ import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { AnalyticsChart } from '@/components/dashboard/AnalyticsChart';
 import { WalletAlert } from '@/components/ui/WalletAlert';
 import { useWeb3 } from '@/contexts/Web3Provider';
+import { useUser } from '@/hooks/useContractData';
 
 export default function Home() {
-  const { isConnected } = useWeb3();
+  const { isConnected, address } = useWeb3();
+  const { data: user } = useUser(address || undefined);
 
   if (!isConnected) {
     return (
@@ -24,9 +26,9 @@ export default function Home() {
   return (
     <DashboardLayout title="Dashboard">
       <div className="space-y-6">
-        <MetricsCards />
-        <RecentActivity />
-        <AnalyticsChart />
+        <MetricsCards userRole={user?.role} />
+        <RecentActivity userRole={user?.role} />
+        <AnalyticsChart userRole={user?.role} />
       </div>
     </DashboardLayout>
   );
