@@ -13,20 +13,30 @@ export const useContractMetrics = () => {
       if (!readContract) throw new Error('Contract not available');
 
       const [
-        totalTransactions,
+        totalTransactionCount,
         pendingApprovals,
         totalUsers,
+        transactionIds,
       ] = await Promise.all([
         readContract.getTransactionCount(),
         readContract.getPendingApprovals(),
         readContract.getUserCount(),
+        readContract.getAllTransactions(),
       ]);
 
+      // Get all transactions to properly calculate active deals
+      const allTransactions = await Promise.all(
+        transactionIds.map((id: bigint) => readContract.getTransaction(id))
+      );
+
+      // Count transactions by actual status
+      const activeDeals = allTransactions.filter((tx: any) => Number(tx.status) === 1).length; // TransactionStatus.Active = 1
+
       return {
-        totalTransactions: Number(totalTransactions),
+        totalTransactions: Number(totalTransactionCount),
         pendingApprovals: pendingApprovals.length,
         totalUsers: Number(totalUsers),
-        activeDeals: Number(totalTransactions) - pendingApprovals.length,
+        activeDeals,
       };
     },
     enabled: isConnected && !!readContract,

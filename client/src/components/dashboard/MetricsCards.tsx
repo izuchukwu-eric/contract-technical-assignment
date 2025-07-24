@@ -135,7 +135,7 @@ export const MetricsCards: React.FC<MetricsCardsProps> = ({ userRole }) => {
           iconBg: 'bg-emerald-500',
         },
         {
-          title: 'Active Deals',
+          title: 'Active Transactions',
           value: metrics.activeDeals,
           icon: BarChart3,
           description: 'Currently active',
@@ -191,7 +191,7 @@ export const MetricsCards: React.FC<MetricsCardsProps> = ({ userRole }) => {
           iconBg: 'bg-amber-500',
         },
         {
-          title: 'Active Deals',
+          title: 'Active Transactions',
           value: metrics.activeDeals,
           icon: BarChart3,
           description: 'Currently active',
