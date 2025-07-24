@@ -3,6 +3,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useWeb3 } from '@/contexts/Web3Provider';
+import { usePendingApprovals, useUser } from '@/hooks/useContractData';
+import { UserRole } from '@/types/contract';
 import { Wallet, WifiOff, AlertCircle, Bell, Copy } from 'lucide-react';
 
 interface WalletConnectionProps {
@@ -23,6 +25,18 @@ export const WalletConnection: React.FC<WalletConnectionProps> = ({ user }) => {
     disconnectWallet,
     switchNetwork
   } = useWeb3();
+
+  // Get pending approvals and current user data
+  const { data: pendingApprovals = [] } = usePendingApprovals();
+  const { data: currentUser } = useUser(address || undefined);
+
+  // Check if user can see notifications (Admin or Manager only)
+  const canSeeNotifications = currentUser && (
+    currentUser.role === UserRole.Admin || 
+    currentUser.role === UserRole.Manager
+  );
+
+  const pendingCount = pendingApprovals.length;
 
   const formatAddress = (addr: string) => {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
@@ -129,12 +143,14 @@ export const WalletConnection: React.FC<WalletConnectionProps> = ({ user }) => {
       )}
       
       {/* Notifications */}
-      <Button variant="ghost" size="icon" className="relative hover:bg-slate-100">
-        <Bell className="h-5 w-5 text-slate-600" />
-        <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full text-xs flex items-center justify-center text-white font-medium">
-          1
-        </span>
-      </Button>
+      {canSeeNotifications && pendingCount > 0 && (
+        <Button variant="ghost" size="icon" className="relative hover:bg-slate-100">
+          <Bell className="h-5 w-5 text-slate-600" />
+          <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full text-xs flex items-center justify-center text-white font-medium">
+            {pendingCount}
+          </span>
+        </Button>
+      )}
       
       {/* User Info & Disconnect */}
       {user && (
