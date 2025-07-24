@@ -155,12 +155,6 @@ npx hardhat node
 npx hardhat run scripts/deploy.js --network localhost
 ```
 
-Copy the deployed `FinancialPlatform` contract address to your `.env.local`:
-
-```env
-NEXT_PUBLIC_CONTRACT_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
-```
-
 ### 4. Start the Frontend
 
 ```bash
