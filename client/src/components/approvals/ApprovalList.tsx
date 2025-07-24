@@ -2,14 +2,13 @@
 
 import React, { useState, useMemo } from 'react';
 import { usePendingApprovals, useProcessApproval, useAllTransactions } from '@/hooks/useContractData';
-import { useWeb3 } from '@/contexts/Web3Provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ApprovalStatus, ApprovalType } from '@/types/contract';
+import { ApprovalType } from '@/types/contract';
 import { formatEther } from 'ethers';
 import { cn } from '@/utils/cn';
 import { 
@@ -23,8 +22,6 @@ import {
   User,
   CreditCard,
   CheckCircle2,
-  RefreshCw,
-  Filter,
   ArrowUpRight,
   Calendar,
   ExternalLink,
@@ -163,7 +160,6 @@ const ProcessApprovalModal: React.FC<ProcessApprovalModalProps> = ({
 export const ApprovalList: React.FC = () => {
   const { data: approvals, isLoading, error } = usePendingApprovals();
   const { data: transactions } = useAllTransactions();
-  const { address } = useWeb3();
   const processApprovalMutation = useProcessApproval();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -278,18 +274,94 @@ export const ApprovalList: React.FC = () => {
     return (
       <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-amber-50 to-orange-50">
-          <CardTitle>Loading Pending Approvals...</CardTitle>
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
+                <Clock className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold text-slate-900">Pending Approvals</CardTitle>
+                <div className="h-4 bg-slate-200 rounded w-32 mt-1 animate-pulse" />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="h-9 bg-slate-200 rounded w-48 animate-pulse" />
+            </div>
+          </div>
+
+          {/* Filters and Search Skeletons */}
+          <div className="flex flex-col lg:flex-row gap-4 pt-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <div className="h-10 bg-slate-200 rounded-md animate-pulse pl-10" />
+            </div>
+
+            <div className="flex gap-3">
+              <div className="h-10 bg-slate-200 rounded w-40 animate-pulse" />
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="flex justify-between items-center p-4 border rounded-lg">
-                  <div className="space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-32" />
-                    <div className="h-3 bg-gray-200 rounded w-48" />
+
+        <CardContent className="p-0">
+          <div className="space-y-0">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="p-6 border-b border-slate-100 last:border-b-0 animate-pulse"
+              >
+                <div className="space-y-4">
+                  {/* Header Row Skeleton */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-4 h-4 bg-slate-200 rounded" />
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-slate-200 rounded-xl" />
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-3">
+                            <div className="h-6 bg-slate-200 rounded w-16" />
+                            <div className="h-5 bg-slate-200 rounded w-20" />
+                            <div className="h-5 bg-slate-200 rounded w-24" />
+                          </div>
+                          <div className="h-4 bg-slate-200 rounded w-48" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-right space-y-1">
+                      <div className="h-6 bg-slate-200 rounded w-24" />
+                    </div>
                   </div>
-                  <div className="h-8 bg-gray-200 rounded w-24" />
+
+                  {/* Details Row Skeleton */}
+                  <div className="ml-16 space-y-3">
+                    <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-slate-200 rounded-full" />
+                        <div className="h-4 bg-slate-200 rounded w-32" />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-4 h-4 bg-slate-200 rounded" />
+                        <div className="h-4 bg-slate-200 rounded w-20" />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 bg-slate-200 rounded w-24" />
+                      <div className="w-3 h-3 bg-slate-200 rounded" />
+                      <div className="h-4 bg-slate-200 rounded w-24" />
+                    </div>
+
+                    <div className="h-12 bg-slate-200 rounded-lg" />
+
+                    <div className="flex justify-end">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 bg-slate-200 rounded w-16" />
+                        <div className="h-8 bg-slate-200 rounded w-16" />
+                        <div className="h-8 bg-slate-200 rounded w-20" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -334,9 +406,6 @@ export const ApprovalList: React.FC = () => {
                   Approve Selected ({selectedApprovals.length})
                 </Button>
               )}
-              <Button variant="ghost" size="sm">
-                <RefreshCw className="w-4 h-4" />
-              </Button>
             </div>
           </div>
 
@@ -357,17 +426,13 @@ export const ApprovalList: React.FC = () => {
                 <SelectTrigger className="w-40 bg-white border-slate-200">
                   <SelectValue placeholder="All Types" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="transaction">Transaction</SelectItem>
-                  <SelectItem value="user">User Registration</SelectItem>
-                  <SelectItem value="role">Role Update</SelectItem>
+                <SelectContent className='bg-white'>
+                  <SelectItem value="all" className='cursor-pointer'>All Types</SelectItem>
+                  <SelectItem value="transaction" className='cursor-pointer'>Transaction</SelectItem>
+                  <SelectItem value="user" className='cursor-pointer'>User Registration</SelectItem>
+                  <SelectItem value="role" className='cursor-pointer'>Role Update</SelectItem>
                 </SelectContent>
               </Select>
-
-              <Button variant="outline" size="sm" className="bg-white border-slate-200">
-                <Filter className="w-4 h-4" />
-              </Button>
             </div>
           </div>
         </CardHeader>
@@ -432,9 +497,6 @@ export const ApprovalList: React.FC = () => {
                           <div className="text-xl font-bold text-slate-900">
                             {relatedTransaction ? `${formatEther(relatedTransaction.amount)} ETH` : 'N/A'}
                           </div>
-                          <div className="text-sm text-slate-600">
-                            {relatedTransaction ? `~$${(parseFloat(formatEther(relatedTransaction.amount)) * 2000).toFixed(2)}` : ''}
-                          </div>
                         </div>
                       </div>
 
@@ -460,7 +522,7 @@ export const ApprovalList: React.FC = () => {
                         {relatedTransaction && (
                           <div className="flex items-center gap-2 text-sm text-slate-600">
                             <span className="font-mono">{formatAddress(approval.requester)}</span>
-                            <ArrowUpRight className="w-3 h-3" />
+                             →
                             <span className="font-mono">{formatAddress(relatedTransaction.to)}</span>
                             <Button
                               variant="ghost"
@@ -481,7 +543,7 @@ export const ApprovalList: React.FC = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="text-slate-600 border-slate-200 hover:bg-slate-50 bg-transparent"
+                              className="text-slate-600 cursor-pointer border-slate-200 hover:bg-slate-50 bg-transparent"
                               onClick={() => setSelectedApproval(approval)}
                             >
                               <Eye className="w-4 h-4 mr-1" />
@@ -491,7 +553,7 @@ export const ApprovalList: React.FC = () => {
                               variant="outline"
                               size="sm"
                               onClick={() => handleReject(approval.id.toString())}
-                              className="text-red-600 border-red-200 hover:bg-red-50"
+                              className="text-red-600 cursor-pointer border-red-200 hover:bg-red-50"
                             >
                               <XCircle className="w-4 h-4 mr-1" />
                               Reject
@@ -499,7 +561,7 @@ export const ApprovalList: React.FC = () => {
                             <Button
                               size="sm"
                               onClick={() => handleApprove(approval.id.toString())}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                              className="bg-emerald-600 cursor-pointer hover:bg-emerald-700 text-white"
                             >
                               <CheckCircle2 className="w-4 h-4 mr-1" />
                               Approve
@@ -535,54 +597,145 @@ export const ApprovalList: React.FC = () => {
 
       {/* Details Modal */}
       {selectedApproval && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Approval Details</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSelectedApproval(null)}
-              >×</Button>
-            </div>
+        <div className="fixed inset-0 h-full bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div 
+            className="fixed inset-0" 
+            onClick={() => setSelectedApproval(null)}
+            aria-label="Close modal"
+          />
+          
+          <Card className="relative bg-white shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-auto">
+            <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-amber-50 to-orange-50">
+              <CardTitle className="flex items-center justify-between text-slate-900">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg flex items-center justify-center">
+                    <Eye className="w-4 h-4 text-white" />
+                  </div>
+                  Approval Details
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setSelectedApproval(null)}
+                  className="text-slate-600 cursor-pointer hover:text-slate-900 hover:bg-slate-100 rounded-full"
+                >
+                  <XCircle className="w-4 h-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
             
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-600">ID</label>
-                <p className="text-sm">#{Number(selectedApproval.id)}</p>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium text-gray-600">Type</label>
-                <div className="flex items-center gap-2">
-                  {getApprovalTypeIcon(selectedApproval.approvalType)}
-                  <span className="text-sm">{getApprovalTypeText(selectedApproval.approvalType)}</span>
+            <CardContent className="p-6">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Approval ID</label>
+                    <div className="px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
+                      <p className="text-sm font-mono text-slate-900">#{Number(selectedApproval.id)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Type</label>
+                    <div className="px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex items-center gap-2">
+                        {getApprovalTypeIcon(selectedApproval.approvalType)}
+                        <span className="text-sm font-medium text-slate-900">{getApprovalTypeText(selectedApproval.approvalType)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">Requester Address</label>
+                  <div className="px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
+                    <p className="text-sm font-mono text-slate-900 break-all">{selectedApproval.requester}</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Transaction ID</label>
+                    <div className="px-3 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-sm font-mono text-blue-800">#{Number(selectedApproval.transactionId)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Created</label>
+                    <div className="px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
+                      <p className="text-sm text-slate-900">{formatDate(selectedApproval.timestamp)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {(() => {
+                  const relatedTransaction = getRelatedTransaction(selectedApproval.transactionId);
+                  if (relatedTransaction) {
+                    return (
+                      <>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-slate-700">Transaction Amount</label>
+                          <div className="px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                            <p className="text-sm font-bold text-green-800">
+                              {formatEther(relatedTransaction.amount)} ETH
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-slate-700">Recipient Address</label>
+                          <div className="px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
+                            <p className="text-sm font-mono text-slate-900 break-all">{relatedTransaction.to}</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-slate-700">Transaction Description</label>
+                          <div className="px-3 py-2 bg-slate-50 rounded-lg border border-slate-200 min-h-[60px]">
+                            <p className="text-sm text-slate-900">{relatedTransaction.description}</p>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  }
+                  return null;
+                })()}
+                
+                {selectedApproval.reason && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Approval Reason</label>
+                    <div className="px-3 py-2 bg-amber-50 rounded-lg border border-amber-200 min-h-[60px]">
+                      <p className="text-sm text-amber-800">{selectedApproval.reason}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-4 border-t border-slate-100">
+                  <Button
+                    variant="outline"
+                    className="flex-1 text-red-600 border-red-200 hover:bg-red-50 cursor-pointer"
+                    onClick={() => {
+                      setSelectedApproval(null);
+                      handleReject(selectedApproval.id.toString());
+                    }}
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Reject Approval
+                  </Button>
+                  <Button
+                    className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+                    onClick={() => {
+                      setSelectedApproval(null);
+                      handleApprove(selectedApproval.id.toString());
+                    }}
+                  >
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Approve Transaction
+                  </Button>
                 </div>
               </div>
-              
-              <div>
-                <label className="text-sm font-medium text-gray-600">Requester</label>
-                <p className="text-sm font-mono">{selectedApproval.requester}</p>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium text-gray-600">Transaction ID</label>
-                <p className="text-sm">#{Number(selectedApproval.transactionId)}</p>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium text-gray-600">Created</label>
-                <p className="text-sm">{formatDate(selectedApproval.timestamp)}</p>
-              </div>
-              
-              {selectedApproval.reason && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Reason</label>
-                  <p className="text-sm">{selectedApproval.reason}</p>
-                </div>
-              )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </>

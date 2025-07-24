@@ -2,9 +2,9 @@
 
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { UserRegistrationForm } from '@/components/users/UserRegistrationForm';
-import { UserList } from '@/components/users/UserList';
-import { UserActivity } from '@/components/users/UserActivity';
+import { UserStats } from '@/components/users/UserStats';
+import { UserManagement } from '@/components/users/UserManagement';
+import { UserSidebar } from '@/components/users/UserSidebar';
 import { useUser } from '@/hooks/useContractData';
 import { useWeb3 } from '@/contexts/Web3Provider';
 import { UserRole } from '@/types/contract';
@@ -105,34 +105,18 @@ export default function UsersPage() {
   return (
     <DashboardLayout title="User Management">
       <div className="space-y-6">
-        {/* Welcome Message */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Welcome, {currentUser.name}
-                </h2>
-                <p className="text-sm text-gray-600">
-                  Manage users, roles, and track platform activity
-                </p>
-              </div>
-              <div className="text-right text-sm text-gray-500">
-                <p>Admin Panel</p>
-                <p className="font-mono text-xs">{address?.slice(0, 10)}...</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Quick Stats */}
+        <UserStats />
 
-        {/* User Registration */}
-        <UserRegistrationForm isAdmin={isAdmin} />
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          {/* User Management */}
+          <div className="xl:col-span-3">
+            <UserManagement isAdmin={isAdmin} />
+          </div>
 
-        {/* User Activity Overview */}
-        <UserActivity />
-
-        {/* User List */}
-        <UserList isAdmin={isAdmin} />
+          {/* Sidebar */}
+          <UserSidebar isAdmin={isAdmin} />
+        </div>
       </div>
     </DashboardLayout>
   );

@@ -23,7 +23,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <Sidebar 
         userRole={currentUser?.role} 
         user={address ? { 
-          name: 'Admin', 
+          name: currentUser?.name || 'User', 
           address: `${address.slice(0, 6)}...${address.slice(-4)}` 
         } : undefined}
       />
@@ -32,7 +32,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         <Header 
           title={title} 
           user={address ? { 
-            name: 'Admin', 
+            name: currentUser?.name || 'User', 
             address: `${address.slice(0, 6)}...${address.slice(-4)}` 
           } : undefined}
         />
