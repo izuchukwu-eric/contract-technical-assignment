@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useAllTransactions, useUserTransactions } from '@/hooks/useContractData';
+import { useAllTransactions, useUserTransactions, useCompleteTransaction } from '@/hooks/useContractData';
 import { useWeb3 } from '@/contexts/Web3Provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,9 @@ import {
   MoreHorizontal,
   Copy,
   Activity,
-  X
+  X,
+  CheckCircle,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 interface TransactionListProps {
@@ -54,11 +56,24 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const [sortBy, setSortBy] = useState<'timestamp' | 'amount'>('timestamp');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  
+  // Add the complete transaction mutation
+  const completeTransactionMutation = useCompleteTransaction();
 
   // Check if wallet is connected
   if (!isConnected) {
     return <WalletAlert />;
   }
+
+  const handleCompleteTransaction = async (transactionId: bigint) => {
+    try {
+      await completeTransactionMutation.mutateAsync({ transactionId });
+      setSelectedTransaction(null); // Close modal after successful completion
+    } catch (error) {
+      console.error('Failed to complete transaction:', error);
+      // Error is handled by the mutation hook
+    }
+  };
 
   const filteredTransactions = useMemo(() => {
     if (!transactions) return [];
@@ -370,7 +385,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div 
             className="fixed inset-0" 
-            onClick={() => setSelectedTransaction(null)}
+            onClick={() => {
+              setSelectedTransaction(null);
+              completeTransactionMutation.reset();
+            }}
             aria-label="Close modal"
           />
           
@@ -386,7 +404,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => setSelectedTransaction(null)}
+                  onClick={() => {
+                    setSelectedTransaction(null);
+                    completeTransactionMutation.reset();
+                  }}
                   className="text-slate-600 cursor-pointer hover:text-slate-900 hover:bg-slate-100 rounded-full"
                 >
                   <X className="w-4 h-4" />
@@ -459,20 +480,54 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                     <div className="px-3 py-2 bg-amber-50 rounded-lg border border-amber-200">
                       <p className="text-sm font-mono text-amber-800">#{Number(selectedTransaction.approvalId)}</p>
                     </div>
+                                    </div>
+                )}
+                
+                {/* Error Display for Transaction Completion */}
+                {completeTransactionMutation.error && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-600" />
+                      <span className="text-sm text-red-700">
+                        {completeTransactionMutation.error.message || 'Failed to complete transaction'}
+                      </span>
+                    </div>
                   </div>
                 )}
-
+                
                 <div className="flex gap-3 pt-4 border-t border-slate-100">
-                  <Button
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                    onClick={() => {
-                      // Add functionality for viewing on explorer
-                      console.log('View on explorer:', selectedTransaction);
-                    }}
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    View on Explorer
-                  </Button>
+                  {selectedTransaction.status === TransactionStatus.Active ? (
+                    // Show Complete Transaction button for active transactions
+                    <Button
+                      className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                      onClick={() => handleCompleteTransaction(selectedTransaction.id)}
+                      disabled={completeTransactionMutation.isPending}
+                    >
+                      {completeTransactionMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Completing...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Complete Transaction
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    // Show View on Explorer button for non-active transactions
+                    <Button
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                      onClick={() => {
+                        // Add functionality for viewing on explorer
+                        console.log('View on explorer:', selectedTransaction);
+                      }}
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      View on Explorer
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>

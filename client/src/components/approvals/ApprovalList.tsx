@@ -569,7 +569,7 @@ export const ApprovalList: React.FC = () => {
                 
                 {selectedApproval.reason && (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">Approval Reason</label>
+                    <label className="text-sm font-medium text-slate-700">Reason for Approval Request</label>
                     <div className="px-3 py-2 bg-amber-50 rounded-lg border border-amber-200 min-h-[60px]">
                       <p className="text-sm text-amber-800">{selectedApproval.reason}</p>
                     </div>

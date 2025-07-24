@@ -534,3 +534,60 @@ export const useUpdateUserRole = () => {
     },
   });
 };
+
+export const useCompleteTransaction = () => {
+  const { contract, isConnected, address } = useWeb3();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ transactionId }: { transactionId: bigint }) => {
+      if (!isConnected) {
+        throw new Error('Wallet not connected. Please connect your wallet to continue.');
+      }
+      
+      if (!address) {
+        throw new Error('No wallet address found. Please reconnect your wallet.');
+      }
+      
+      if (!contract) {
+        throw new Error('Contract not available. Please ensure your wallet is connected and try again.');
+      }
+      
+      console.log('Completing transaction:', { transactionId: transactionId.toString() });
+      
+      try {
+        const tx = await contract.completeTransaction(transactionId);
+        console.log('Complete transaction sent:', tx.hash);
+        
+        const receipt = await tx.wait();
+        console.log('Complete transaction confirmed:', receipt);
+        
+        return receipt;
+      } catch (error: any) {
+        console.error('Transaction completion failed:', error);
+        
+        // Handle specific error types
+        if (error.code === 'UNSUPPORTED_OPERATION') {
+          throw new Error('Wallet connection issue. Please reconnect your wallet and try again.');
+        }
+        if (error.code === 'ACTION_REJECTED') {
+          throw new Error('Transaction completion was rejected by user.');
+        }
+        if (error.code === 'INSUFFICIENT_FUNDS') {
+          throw new Error('Insufficient funds to complete the transaction.');
+        }
+        
+        throw new Error(error.message || 'Failed to complete transaction. Please try again.');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['user-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-metrics'] });
+    },
+    onError: (error) => {
+      console.error('Transaction completion failed:', error);
+    },
+  });
+};
