@@ -496,8 +496,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 )}
                 
                 <div className="flex gap-3 pt-4 border-t border-slate-100">
-                  {selectedTransaction.status === TransactionStatus.Active ? (
-                    // Show Complete Transaction button for active transactions
+                  {selectedTransaction.status === TransactionStatus.Active && 
+                   address && 
+                   selectedTransaction.from.toLowerCase() === address.toLowerCase() ? (
+                    // Show Complete Transaction button only for active transactions owned by current user
                     <Button
                       className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                       onClick={() => handleCompleteTransaction(selectedTransaction.id)}
@@ -516,7 +518,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                       )}
                     </Button>
                   ) : (
-                    // Show View on Explorer button for non-active transactions
+                    // Show View on Explorer button for non-active transactions or transactions not owned by current user
                     <Button
                       className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                       onClick={() => {
