@@ -22,7 +22,6 @@ import {
   User,
   CreditCard,
   CheckCircle2,
-  ArrowUpRight,
   Calendar,
   ExternalLink,
 } from 'lucide-react';

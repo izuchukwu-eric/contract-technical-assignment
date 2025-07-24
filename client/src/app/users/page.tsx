@@ -10,6 +10,7 @@ import { useWeb3 } from '@/contexts/Web3Provider';
 import { UserRole } from '@/types/contract';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, Lock } from 'lucide-react';
+import { WalletAlert } from '@/components/ui/WalletAlert';
 
 export default function UsersPage() {
   const { address, isConnected } = useWeb3();
@@ -20,19 +21,10 @@ export default function UsersPage() {
   if (!isConnected) {
     return (
       <DashboardLayout title="User Management">
-        <Card>
-          <CardContent className="flex items-center justify-center py-16">
-            <div className="text-center">
-              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Wallet Connection Required
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Please connect your wallet to access user management
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <WalletAlert 
+          title="Connect Wallet to Manage Users"
+          message="Connect your wallet to view and manage user accounts and permissions."
+        />
       </DashboardLayout>
     );
   }

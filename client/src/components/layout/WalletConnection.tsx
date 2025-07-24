@@ -35,7 +35,6 @@ export const WalletConnection: React.FC<WalletConnectionProps> = ({ user }) => {
   const getNetworkInfo = () => {
     const isLocalhost = chainId === 31337;
     const isSepolia = chainId === 11155111;
-    const isUnsupportedNetwork = !isLocalhost && !isSepolia;
 
     if (isLocalhost) return { name: 'Hardhat Network', color: 'green' };
     if (isSepolia) return { name: 'Sepolia Network', color: 'blue' };
@@ -140,20 +139,20 @@ export const WalletConnection: React.FC<WalletConnectionProps> = ({ user }) => {
       {/* User Info & Disconnect */}
       {user && (
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 rounded-lg">
+          <div 
+            className="flex items-center cursor-pointer gap-2 px-3 py-2 bg-slate-100 rounded-lg"
+            onClick={disconnectWallet}
+          >
             <div className="w-6 h-6 items-center flex justify-center bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
               <span className="text-white font-semibold text-xs">
                 {user.name.charAt(0)}
               </span>
             </div>
             <span className="text-sm font-medium text-slate-700">{user.address}</span>
-            <Button variant="ghost" size="sm" onClick={handleCopyAddress} className="p-1 h-auto">
+            <Button variant="ghost" size="sm" onClick={handleCopyAddress} className="p-1 h-auto cursor-pointer">
               <Copy className="w-3 h-3" />
             </Button>
           </div>
-          <Button variant="outline" size="sm" onClick={disconnectWallet}>
-            <WifiOff className="h-4 w-4" />
-          </Button>
         </div>
       )}
     </div>

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAllUsers, useUpdateUserRole } from '@/hooks/useContractData';
 import { UserRole } from '@/types/contract';
+import { useWeb3 } from '@/contexts/Web3Provider';
 import { cn } from '@/utils/cn';
 import { AddUserModal } from './AddUserModal';
 import { RoleUpdateModal } from './RoleUpdateModal';
@@ -31,6 +32,7 @@ interface UserManagementProps {
 }
 
 export const UserManagement: React.FC<UserManagementProps> = ({ isAdmin }) => {
+  const { isConnected } = useWeb3();
   const { data: users, isLoading } = useAllUsers();
   const updateRoleMutation = useUpdateUserRole();
   const [searchQuery, setSearchQuery] = useState('');
