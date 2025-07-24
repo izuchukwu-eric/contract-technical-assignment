@@ -85,14 +85,16 @@ async function main() {
   // Transaction 1
   await user2Platform.createTransaction(
     await user3.getAddress(),
-    ethers.parseEther("1000")
+    ethers.parseEther("1000"),
+    "Payment for services"
   );
   console.log("Created transaction 1");
 
   // Transaction 2
   await user2Platform.createTransaction(
     await user1.getAddress(),
-    ethers.parseEther("2500")
+    ethers.parseEther("2500"),
+    "Monthly salary payment"
   );
   console.log("Created transaction 2");
 
@@ -102,7 +104,8 @@ async function main() {
   // Transaction 3
   await user3Platform.createTransaction(
     await user2.getAddress(),
-    ethers.parseEther("500")
+    ethers.parseEther("500"),
+    "Reimbursement"
   );
   console.log("Created transaction 3");
 
@@ -110,15 +113,15 @@ async function main() {
   console.log("Requesting approvals...");
   
   // Request approval for transaction 1
-  await user2Platform.requestApproval(1);
+  await user2Platform.requestApproval(1, "Need approval for service payment");
   console.log("Requested approval for transaction 1");
 
   // Request approval for transaction 2
-  await user2Platform.requestApproval(2);
+  await user2Platform.requestApproval(2, "Monthly salary needs approval");
   console.log("Requested approval for transaction 2");
 
   // Request approval for transaction 3
-  await user3Platform.requestApproval(3);
+  await user3Platform.requestApproval(3, "Reimbursement request");
   console.log("Requested approval for transaction 3");
 
   // Process some approvals
@@ -126,11 +129,11 @@ async function main() {
   const approver1Platform = financialPlatform.connect(approver1);
   
   // Approve transaction 1
-  await approver1Platform.processApproval(1, true);
+  await approver1Platform.processApproval(1, true, "Approved after review");
   console.log("Approved transaction 1");
 
   // Reject transaction 2
-  await approver1Platform.processApproval(2, false);
+  await approver1Platform.processApproval(2, false, "Amount too high for approval");
   console.log("Rejected transaction 2");
 
   // Complete approved transaction
