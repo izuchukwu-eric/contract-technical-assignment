@@ -137,7 +137,7 @@ Create `.env` in the `contract` directory (for testnet deployment):
 
 ```env
 PRIVATE_KEY=your_wallet_private_key_for_deployment
-SEPOLIA_RPC_URL=your_holesky_rpc_endpoint
+SEPOLIA_RPC_URL=your_sepolia_rpc_endpoint
 ETHERSCAN_API_KEY=your_etherscan_api_key_for_verification
 ```
 
