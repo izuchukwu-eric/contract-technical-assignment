@@ -246,18 +246,18 @@ npm run lint        # ESLint checking
 ### Supported Networks
 
 - **Localhost (31337)**: Development and testing
-- **Holesky Testnet (17000)**: Testnet deployment
+- **Sepolia Testnet (11155111)**: Testnet deployment
 
 ### Testnet Deployment
 
 ```bash
 cd contract
 
-# Deploy to Holesky testnet
+# Deploy to Sepolia testnet
 npm run deploy:holesky
 
 # Verify on Etherscan (optional)
-npx hardhat verify --network holesky <CONTRACT_ADDRESS>
+npx hardhat verify --network sepolia <CONTRACT_ADDRESS>
 ```
 
 ### Network Switching
