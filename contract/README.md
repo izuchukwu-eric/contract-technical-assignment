@@ -87,7 +87,7 @@ npm run deploy:sepolia
 Create a `.env` file with:
 ```env
 PRIVATE_KEY=your_wallet_private_key
-SEPOLIA_RPC_URL=your_holesky_rpc_endpoint
+SEPOLIA_RPC_URL=your_sepolia_rpc_endpoint
 ETHERSCAN_API_KEY=your_etherscan_api_key
 ```
 

@@ -120,7 +120,7 @@ cd contract
 npm install
 
 # Install frontend dependencies
-cd ../client
+cd client
 npm install
 ```
 
