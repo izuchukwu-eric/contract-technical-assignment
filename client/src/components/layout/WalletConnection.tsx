@@ -126,7 +126,7 @@ export const WalletConnection: React.FC<WalletConnectionProps> = ({ user }) => {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => handleNetworkSwitch('0x7A69')}
+            onClick={() => handleNetworkSwitch('31337')}
             className="text-xs"
           >
             Switch to Hardhat
@@ -134,7 +134,7 @@ export const WalletConnection: React.FC<WalletConnectionProps> = ({ user }) => {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => handleNetworkSwitch('0xAA36A7')}
+            onClick={() => handleNetworkSwitch('11155111')}
             className="text-xs"
           >
             Switch to Sepolia

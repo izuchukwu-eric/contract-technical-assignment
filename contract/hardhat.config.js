@@ -15,8 +15,8 @@ const config = {
     },
   },
   networks: {
-    holesky: {
-      url: process.env.HOLESKY_RPC_URL || "https://ethereum-holesky.publicnode.com",
+    sepolia: {
+      url: process.env.SEPOLIA_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 17000,
       timeout: 120000, // 2 minutes timeout
@@ -26,7 +26,7 @@ const config = {
   },
   etherscan: {
     apiKey: {
-      holesky: process.env.ETHERSCAN_API_KEY || "",
+      sepolia: process.env.ETHERSCAN_API_KEY || "",
     },
   },
 };

@@ -1,6 +1,6 @@
 import { Contract, BrowserProvider, JsonRpcProvider } from 'ethers';
 
-export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '';
+export const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_FINANCIAL_PLATFORM_ADDRESS || '';
 
 export const FINANCIAL_PLATFORM_ABI = [
   {
@@ -731,27 +731,4 @@ export const FINANCIAL_PLATFORM_ABI = [
 
 export const getContract = (provider: BrowserProvider | JsonRpcProvider, signer?: any) => {
   return new Contract(CONTRACT_ADDRESS, FINANCIAL_PLATFORM_ABI, signer || provider);
-};
-
-export const NETWORK_CONFIG = {
-  localhost: {
-    chainId: '31337',
-    chainName: 'Hardhat Network',
-    nativeCurrency: {
-      name: 'Ether',
-      symbol: 'ETH',
-      decimals: 18,
-    },
-    rpcUrls: ['http://127.0.0.1:8545'],
-  },
-  sepolia: {
-    chainId: '11155111',
-    chainName: 'Sepolia Test Network',
-    nativeCurrency: {
-      name: 'Sepolia Ether',
-      symbol: 'ETH',
-      decimals: 18,
-    },
-    rpcUrls: ['https://sepolia.infura.io/v3/'],
-  },
 };

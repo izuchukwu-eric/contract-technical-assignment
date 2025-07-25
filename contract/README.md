@@ -69,25 +69,25 @@ The test suite covers:
 npx hardhat node
 
 # Deploy contracts locally
-npx hardhat run scripts/deploy.js --network localhost
+npx run deploy:hardhat
 ```
 
-### Testnet Deployment (Holesky)
+### Testnet Deployment (Sepolia)
 ```bash
 # Set environment variables
 export PRIVATE_KEY="your_private_key"
-export HOLESKY_RPC_URL="your_rpc_url"
+export SEPOLIA_RPC_URL="your_rpc_url"
 export ETHERSCAN_API_KEY="your_etherscan_api_key"
 
 # Deploy to Holesky testnet
-npm run deploy:holesky
+npm run deploy:sepolia
 ```
 
 ### Environment Variables
 Create a `.env` file with:
 ```env
 PRIVATE_KEY=your_wallet_private_key
-HOLESKY_RPC_URL=your_holesky_rpc_endpoint
+SEPOLIA_RPC_URL=your_holesky_rpc_endpoint
 ETHERSCAN_API_KEY=your_etherscan_api_key
 ```
 
@@ -127,4 +127,4 @@ The deployment script automatically:
 
 The project supports:
 - **Localhost**: For development and testing
-- **Holesky Testnet**: For testnet deployment and verification
+- **Sepolia Testnet**: For testnet deployment and verification
