@@ -129,18 +129,15 @@ npm install
 Create `.env.local` in the `client` directory:
 
 ```env
-# Contract Address (set after deployment)
-NEXT_PUBLIC_CONTRACT_ADDRESS=
-
-# Network Configuration (optional - has defaults)
-NEXT_PUBLIC_SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_PROJECT_ID
+NEXT_PUBLIC_FINANCIAL_PLATFORM_ADDRESS=
+NEXT_PUBLIC_MOCK_TOKEN_ADDRESS=
 ```
 
 Create `.env` in the `contract` directory (for testnet deployment):
 
 ```env
 PRIVATE_KEY=your_wallet_private_key_for_deployment
-HOLESKY_RPC_URL=your_holesky_rpc_endpoint
+SEPOLIA_RPC_URL=your_holesky_rpc_endpoint
 ETHERSCAN_API_KEY=your_etherscan_api_key_for_verification
 ```
 
@@ -151,8 +148,10 @@ ETHERSCAN_API_KEY=your_etherscan_api_key_for_verification
 cd contract
 npx hardhat node
 
-# Terminal 2: Deploy contracts with test data
-npx hardhat run scripts/deploy.js --network localhost
+# In a new terminal: Deploy contracts locally or to sepolia testnet
+npx run deploy:hardhat
+
+npx run deploy:sepolia
 ```
 
 ### 4. Start the Frontend
