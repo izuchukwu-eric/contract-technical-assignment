@@ -254,7 +254,7 @@ npm run lint        # ESLint checking
 cd contract
 
 # Deploy to Sepolia testnet
-npm run deploy:holesky
+npm run deploy:sepolia
 
 # Verify on Etherscan (optional)
 npx hardhat verify --network sepolia <CONTRACT_ADDRESS>
